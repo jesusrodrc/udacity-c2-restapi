@@ -28,8 +28,27 @@ router.get('/:id',
 router.patch('/:id', 
     requireAuth, 
     async (req: Request, res: Response) => {
-        //@TODO try it yourself
-        res.send(500).send("not implemented")
+        let { id } = req.params;
+        const caption = req.body.caption;
+        const fileName = req.body.url;
+        if (!caption && !fileName) {
+            return res.status(400).send({ message: 'Either Caption or Filename is required' });
+        }
+
+        const item = await FeedItem.findByPk(id);
+        // check Caption is valid
+        if (caption) {
+            item.caption = caption;
+        }
+
+        // check Filename is valid
+        if (fileName) {
+            item.url = fileName;
+        }
+        const saved_item = await item.save();
+
+        saved_item.url = AWS.getGetSignedUrl(saved_item.url);
+        res.status(201).send(saved_item);
 });
 
 
